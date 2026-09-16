@@ -1,17 +1,17 @@
 resource "azurerm_resource_group" "example" {
   name     = "${var.environment}-resources"
-  location = var.allowed_location[0]
+  location = var.allowed_locations[2]
 }
 
 resource "azurerm_virtual_network" "main" {
   name                = "${var.environment}-network"
-  address_space       = [var.network_config[0]]
+  address_space       = [element(var.network_config,0)]
   location            = azurerm_resource_group.example.location
   resource_group_name = azurerm_resource_group.example.name
 }
 
 resource "azurerm_subnet" "internal" {
-  name                 = "${var.environment}-subnet"
+  name                 = "internal"
   resource_group_name  = azurerm_resource_group.example.name
   virtual_network_name = azurerm_virtual_network.main.name
   address_prefixes     = ["${element(var.network_config, 1)}/${element(var.network_config, 2)}"]
@@ -34,7 +34,7 @@ resource "azurerm_virtual_machine" "main" {
   location              = azurerm_resource_group.example.location
   resource_group_name   = azurerm_resource_group.example.name
   network_interface_ids = [azurerm_network_interface.main.id]
-  vm_size               = "Standard_DS1_v2"
+  vm_size               = var.allowed_vm_sizes[0]
 
   # Uncomment this line to delete the OS disk automatically when deleting the VM
   delete_os_disk_on_termination = var.is_delete
@@ -53,7 +53,7 @@ resource "azurerm_virtual_machine" "main" {
     caching           = "ReadWrite"
     create_option     = "FromImage"
     managed_disk_type = "Standard_LRS"
-    disk_size_gb      = var.os_disk_size
+    disk_size_gb = var.storage_disk
   }
   os_profile {
     computer_name  = "hostname"
@@ -65,7 +65,7 @@ resource "azurerm_virtual_machine" "main" {
   }
   tags = {
     environment = var.resource_tags["environment"]
-    owner       = var.resource_tags["owner"]
-    department  = var.resource_tags["department"]
+    managed_by = var.resource_tags["managed_by"]
+    department = var.resource_tags["department"]
   }
 }
