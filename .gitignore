@@ -14,3 +14,4 @@
 # Terraform crash logs
 crash.log
 crash.*.log
+day14/.ssh/
